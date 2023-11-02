@@ -9,6 +9,14 @@ use tauri::{
     SystemTrayMenuItem,
 };
 
+#[derive(Default)]
+struct TrayState {
+    hidden: bool,
+}
+
+#[derive(Default)]
+struct ManagedTrayState(Arc<Mutex<TrayState>>);
+
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -17,6 +25,7 @@ fn greet(name: &str) -> String {
 
 fn main() {
     tauri::Builder::default()
+        .manage(ManagedTrayState::default())
         .system_tray(init_tray())
         .on_system_tray_event(handle_tray_event)
         .setup(init_global_input_listener)
@@ -62,6 +71,11 @@ fn init_global_input_listener<'a>(app: &'a mut App) -> Result<(), Box<dyn std::e
 }
 
 fn handle_tray_event<'a>(app: &'a AppHandle, event: SystemTrayEvent) {
+    let state = app
+        .try_state::<ManagedTrayState>()
+        .expect("could not retrieve state");
+    let mut state = state.0.lock().expect("failed to lock tray state");
+
     match event {
         SystemTrayEvent::MenuItemClick { id, .. } => {
             let item_handle = app.tray_handle().get_item(&id);
@@ -70,10 +84,19 @@ fn handle_tray_event<'a>(app: &'a AppHandle, event: SystemTrayEvent) {
                 "restart" => app.restart(),
                 "hide" => {
                     if let Some(window) = app.get_window("main") {
-                        window.hide().expect("failed to hide window");
-                        item_handle
-                            .set_selected(true)
-                            .expect("failed to select hide option");
+                        if state.hidden {
+                            window.show().expect("failed to show window");
+                            item_handle
+                                .set_selected(false)
+                                .expect("failed to select show option");
+                            state.hidden = false;
+                        } else {
+                            window.hide().expect("failed to hide window");
+                            item_handle
+                                .set_selected(true)
+                                .expect("failed to select hide option");
+                            state.hidden = true;
+                        }
                     }
                 }
                 other => {
