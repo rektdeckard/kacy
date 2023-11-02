@@ -1,0 +1,75 @@
+:root {
+  --key-text-color: #333;
+  --key-text-color-dark: #f6f6f6;
+  --key-background-color: #eee;
+  --key-border-color: #b4b4b4;
+  --titlebar-color: #42caec;
+  --titlebar-color-dark: #42caec;
+  --window-background-color: transparent;
+  --window-background-color-dark: transparent;
+
+  --font-size: 36px;
+  --key-padding: 8px 16px;
+  --key-spacing: 16px;
+  --window-transition-time: 200ms;
+  --window-opacity: 1;
+}
+
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: var(--font-size);
+  font-weight: 400;
+
+  color: var(--key-text-color);
+  background-color: var(--window-background-color);
+  user-select: none;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+html:hover .titlebar {
+  background-color: var(--titlebar-color);
+}
+
+.titlebar:active {
+  background-color: var(--titlebar-color);
+}
+
+main {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--key-spacing);
+}
+
+.titlebar {
+  position:fixed;
+  inset: 0;
+  height: 24px;
+  background-color: transparent;
+  transition: background-color var(--window-transition-time) ease;
+}
+
+#root {
+  user-select: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: var(--key-text-color-dark);
+    background-color: var(--window-background-color-dark);
+  }
+}
