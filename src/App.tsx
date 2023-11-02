@@ -4,8 +4,10 @@ import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 import Key from "./components/Key";
 
-type Payload = {
-  key: string;
+type KeyEventPayload = {
+  original: string;
+  label: string;
+  code: number;
 };
 
 type KeyItem = {
@@ -17,7 +19,7 @@ type KeyItem = {
 function App() {
   const [unlisten, setUnlisten] = createSignal<UnlistenFn>();
   const [keys, setKeys] = createSignal<KeyItem[]>([]);
-  const [countdown, setCountdown] = createSignal<number>();
+  const [_, setCountdown] = createSignal<number>();
 
   function createKey(id: number, name: string) {
     setCountdown((cd) => {
@@ -37,18 +39,13 @@ function App() {
   }
 
   onMount(async () => {
-    const m = /([A-z,0-9]+)\(([0-9]+)\)/;
-    const unlisten = await listen<Payload>("kbi", (event) => {
+    const unlisten = await listen<KeyEventPayload>("kbi", (event) => {
+      console.log({ event });
       const {
         id,
-        payload: { key },
+        payload: { label, code },
       } = event;
-
-      const res = key.match(m);
-      if (res) {
-        const [_, keyName, keyCode] = [...res];
-        createKey(id, keyName);
-      }
+      createKey(id, label);
     });
 
     setUnlisten(() => unlisten);

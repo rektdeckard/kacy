@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use kacy::extract_key_payload;
 use mki::{bind_any_key, Action, Keyboard};
 use std::sync::{Arc, Mutex};
 use tauri::{
@@ -41,25 +42,20 @@ fn init_tray() -> SystemTray {
 #[derive(Clone, serde::Serialize)]
 struct Payload {
     key: String,
+    original: Keyboard,
 }
 
 #[tauri::command]
-fn test_app_handle(app: Arc<Mutex<AppHandle>>, key: Keyboard) {
+fn emit_key_event(app: Arc<Mutex<AppHandle>>, key: Keyboard) {
     let app = app.lock().unwrap();
-    app.emit_all(
-        "kbi",
-        Payload {
-            key: key.to_string(),
-        },
-    )
-    .unwrap();
+    app.emit_all("kbi", extract_key_payload(key)).unwrap();
 }
 
 fn init_global_input_listener<'a>(app: &'a mut App) -> Result<(), Box<dyn std::error::Error>> {
     let handle = Arc::new(Mutex::new(app.app_handle()));
     bind_any_key(Action::handle_kb(move |key| {
         let handle = handle.clone();
-        test_app_handle(handle, key);
+        emit_key_event(handle, key);
     }));
 
     Ok(())
